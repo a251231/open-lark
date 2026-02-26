@@ -31,6 +31,13 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Build web workbench example
         run: cargo build --example group_sync_workbench --no-default-features --features "communication,docs,bitable,ai"
+      - name: Upload group_sync_workbench artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: group_sync_workbench-ubuntu
+          path: target/debug/examples/group_sync_workbench
+          if-no-files-found: error
+          retention-days: 14
 
   test:
     runs-on: ubuntu-latest
