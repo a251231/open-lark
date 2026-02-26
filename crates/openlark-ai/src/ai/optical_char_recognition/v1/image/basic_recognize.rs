@@ -2,7 +2,7 @@
 //!
 //! 基础的 OCR 文字识别服务，将图片中的文字转换为可编辑文本。
 //!
-//! docPath: https://open.feishu.cn/document/optical-char-recognition-v1/basic_recognize
+//! docPath: https://open.feishu.cn/document/server-docs/ai-ability/optical-char-recognition-v1/image/basic_recognize
 
 use openlark_core::{
     api::ApiRequest, config::Config, http::Transport, req_option::RequestOption, SDKResult,
@@ -10,7 +10,7 @@ use openlark_core::{
 use serde::{Deserialize, Serialize};
 
 use crate::common::api_utils::{extract_response_data, serialize_params};
-use crate::endpoints::OPTICAL_CHAR_RECOGNITION_V1_BASIC_RECOGNIZE;
+use crate::endpoints::OPTICAL_CHAR_RECOGNITION_V1_IMAGE_BASIC_RECOGNIZE;
 
 /// OCR 基础识别请求体
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -122,7 +122,7 @@ impl BasicRecognizeRequest {
             .map_err(|reason| openlark_core::error::validation_error("请求参数非法", reason))?;
 
         let req: ApiRequest<BasicRecognizeResponse> =
-            ApiRequest::post(OPTICAL_CHAR_RECOGNITION_V1_BASIC_RECOGNIZE)
+            ApiRequest::post(OPTICAL_CHAR_RECOGNITION_V1_IMAGE_BASIC_RECOGNIZE)
                 .body(serialize_params(&body, "OCR 基础识别")?);
 
         let resp = Transport::request(req, &self.config, Some(option)).await?;
@@ -186,7 +186,7 @@ impl BasicRecognizeRequestBuilder {
 
 /// 执行 OCR 基础识别
 ///
-/// docPath: https://open.feishu.cn/document/optical-char-recognition-v1/basic_recognize
+/// docPath: https://open.feishu.cn/document/server-docs/ai-ability/optical-char-recognition-v1/image/basic_recognize
 pub async fn basic_recognize(
     config: &Config,
     body: BasicRecognizeBody,
@@ -204,7 +204,7 @@ pub async fn basic_recognize_with_options(
         .map_err(|reason| openlark_core::error::validation_error("请求参数非法", reason))?;
 
     let req: ApiRequest<BasicRecognizeResponse> =
-        ApiRequest::post(OPTICAL_CHAR_RECOGNITION_V1_BASIC_RECOGNIZE)
+        ApiRequest::post(OPTICAL_CHAR_RECOGNITION_V1_IMAGE_BASIC_RECOGNIZE)
             .body(serialize_params(&body, "OCR 基础识别")?);
 
     let resp = Transport::request(req, config, Some(option)).await?;
@@ -284,5 +284,13 @@ mod tests {
 
         assert_eq!(body.file_token, "token_123");
         assert_eq!(body.recognition_model, Some(RecognitionModel::TextBox));
+    }
+
+    #[test]
+    fn test_image_endpoint_constant() {
+        assert!(
+            OPTICAL_CHAR_RECOGNITION_V1_IMAGE_BASIC_RECOGNIZE.contains("/image/"),
+            "OCR 图片识别端点必须使用 /image/basic_recognize"
+        );
     }
 }

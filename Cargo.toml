@@ -202,7 +202,7 @@ urlencoding = { workspace = true }
 strum = { workspace = true }
 strum_macros = { workspace = true }
 thiserror = { workspace = true }
-tokio = { workspace = true }
+tokio = { workspace = true, features = ["signal", "time", "net", "sync"] }
 url = { workspace = true }
 uuid = { workspace = true }
 lark-websocket-protobuf = { workspace = true }
@@ -211,6 +211,7 @@ lark-websocket-protobuf = { workspace = true }
 colored = "2.1"  # 用于彩色输出
 clap = { version = "4.4", features = ["derive"] }  # 命令行参数解析
 
+axum = { version = "0.7", features = ["json", "macros"] }
 [dev-dependencies]
 dotenvy = { workspace = true }
 env_logger = { workspace = true }
@@ -236,6 +237,11 @@ harness = false
 name = "websocket_echo_bot"
 path = "examples/01_getting_started/websocket_echo_bot.rs"
 required-features = ["communication", "websocket"]
+
+[[example]]
+name = "group_sync_workbench"
+path = "examples/group_sync_workbench.rs"
+required-features = ["communication", "docs", "ai"]
 
 [features]
 default = ["core-services"]
