@@ -12,10 +12,10 @@
 
 ## 运行前准备
 
-需要启用 feature：`communication,docs,ai`
+需要启用 feature：`communication,docs,bitable,ai`
 
 ```bash
-cargo run --example group_sync_workbench --features "communication,docs,ai" -- --help
+cargo run --example group_sync_workbench --features "communication,docs,bitable,ai" -- --help
 ```
 
 ## 必填环境变量
@@ -41,43 +41,43 @@ cargo run --example group_sync_workbench --features "communication,docs,ai" -- -
 
 ```bash
 # 查看群信息
-cargo run --example group_sync_workbench --features "communication,docs,ai" -- chat-info --chat-id oc_xxx
+cargo run --example group_sync_workbench --features "communication,docs,bitable,ai" -- chat-info --chat-id oc_xxx
 
 # 拉取群消息
-cargo run --example group_sync_workbench --features "communication,docs,ai" -- pull --chat-id oc_xxx --page-size 20 --max-pages 2
+cargo run --example group_sync_workbench --features "communication,docs,bitable,ai" -- pull --chat-id oc_xxx --page-size 20 --max-pages 2
 
 # 同步到 Bitable（默认启用 OCR）
-cargo run --example group_sync_workbench --features "communication,docs,ai" -- sync --chat-id oc_xxx --page-size 20 --max-pages 1
+cargo run --example group_sync_workbench --features "communication,docs,bitable,ai" -- sync --chat-id oc_xxx --page-size 20 --max-pages 1
 
 # 同步到 Bitable（跳过 OCR）
-cargo run --example group_sync_workbench --features "communication,docs,ai" -- sync --chat-id oc_xxx --skip-ocr
+cargo run --example group_sync_workbench --features "communication,docs,bitable,ai" -- sync --chat-id oc_xxx --skip-ocr
 
 # 同步到 Bitable（全量重刷，忽略本地去重状态）
-cargo run --example group_sync_workbench --features "communication,docs,ai" -- sync --chat-id oc_xxx --full-sync
+cargo run --example group_sync_workbench --features "communication,docs,bitable,ai" -- sync --chat-id oc_xxx --full-sync
 
 # 查看同步状态（全部群）
-cargo run --example group_sync_workbench --features "communication,docs,ai" -- state
+cargo run --example group_sync_workbench --features "communication,docs,bitable,ai" -- state
 
 # 查看某个群的同步状态
-cargo run --example group_sync_workbench --features "communication,docs,ai" -- state --chat-id oc_xxx
+cargo run --example group_sync_workbench --features "communication,docs,bitable,ai" -- state --chat-id oc_xxx
 
 # 清理某个群的同步状态
-cargo run --example group_sync_workbench --features "communication,docs,ai" -- clear-state --chat-id oc_xxx
+cargo run --example group_sync_workbench --features "communication,docs,bitable,ai" -- clear-state --chat-id oc_xxx
 
 # 清理全部同步状态
-cargo run --example group_sync_workbench --features "communication,docs,ai" -- clear-state --all
+cargo run --example group_sync_workbench --features "communication,docs,bitable,ai" -- clear-state --all
 
 # 发送文本
-cargo run --example group_sync_workbench --features "communication,docs,ai" -- send-text --chat-id oc_xxx --text "hello"
+cargo run --example group_sync_workbench --features "communication,docs,bitable,ai" -- send-text --chat-id oc_xxx --text "hello"
 
 # 定时发送图片
-cargo run --example group_sync_workbench --features "communication,docs,ai" -- schedule-image --chat-id oc_xxx --image-key img_v2_xxx --interval-secs 300 --max-runs 10
+cargo run --example group_sync_workbench --features "communication,docs,bitable,ai" -- schedule-image --chat-id oc_xxx --image-key img_v2_xxx --interval-secs 300 --max-runs 10
 
 # 控制台 UI
-cargo run --example group_sync_workbench --features "communication,docs,ai" -- ui
+cargo run --example group_sync_workbench --features "communication,docs,bitable,ai" -- ui
 
 # Web UI（HTTP 页面）
-cargo run --example group_sync_workbench --features "communication,docs,ai" -- web --host 127.0.0.1 --port 8080
+cargo run --example group_sync_workbench --features "communication,docs,bitable,ai" -- web --host 127.0.0.1 --port 8080
 ```
 
 ## Web UI 说明

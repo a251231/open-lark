@@ -241,7 +241,7 @@ required-features = ["communication", "websocket"]
 [[example]]
 name = "group_sync_workbench"
 path = "examples/group_sync_workbench.rs"
-required-features = ["communication", "docs", "ai"]
+required-features = ["communication", "docs", "bitable", "ai"]
 
 [features]
 default = ["core-services"]
@@ -263,7 +263,7 @@ communication = ["client", "openlark-communication"]
 cardkit = ["client", "openlark-cardkit"]
 
 # 文档管理
-docs = ["client", "openlark-docs"]
+docs = ["client", "openlark-docs", "openlark-docs/ccm-core"]
 
 # 人力资源
 hr = ["client", "openlark-hr"]
@@ -278,8 +278,8 @@ application = ["client", "openlark-application"]
 platform = ["client", "openlark-platform"]
 analytics = ["client", "openlark-analytics"]
 user = ["client", "openlark-user"]
-base = ["client", "openlark-docs"]
-bitable = ["client", "openlark-docs"]
+base = ["client", "openlark-docs", "openlark-docs/base"]
+bitable = ["client", "openlark-docs", "openlark-docs/bitable"]
 
 # === 推荐功能组合 (Recommended Feature Sets) ===
 # 核心业务功能

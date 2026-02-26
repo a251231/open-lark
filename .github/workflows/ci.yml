@@ -30,7 +30,7 @@ jobs:
           version: 23.4
           repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Build web workbench example
-        run: cargo build --example group_sync_workbench --no-default-features --features "communication,docs,ai"
+        run: cargo build --example group_sync_workbench --no-default-features --features "communication,docs,bitable,ai"
 
   test:
     runs-on: ubuntu-latest

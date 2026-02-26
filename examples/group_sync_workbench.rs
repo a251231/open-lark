@@ -1,9 +1,9 @@
-﻿use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap, HashSet};
 use std::fs;
+use std::io::{self, Write};
 use std::net::SocketAddr;
 use std::path::Path;
 use std::sync::Arc;
-use std::io::{self, Write};
 use std::time::Duration;
 
 use anyhow::{anyhow, Context, Result};
@@ -430,15 +430,9 @@ async fn run_ui(runtime: &Runtime) -> Result<()> {
                 let page_size = prompt_u32("Page size (default: 20)", 20)? as i32;
                 let max_pages = prompt_u32("Max pages (default: 1)", 1)?;
 
-                let messages = pull_message_digests(
-                    runtime,
-                    &chat_id,
-                    page_size,
-                    max_pages,
-                    None,
-                    None,
-                )
-                .await?;
+                let messages =
+                    pull_message_digests(runtime, &chat_id, page_size, max_pages, None, None)
+                        .await?;
                 print_message_digests(&messages);
             }
             "3" => {
@@ -546,15 +540,8 @@ async fn pull_message_digests(
     start_time: Option<String>,
     end_time: Option<String>,
 ) -> Result<Vec<MessageDigest>> {
-    let pages = pull_message_items(
-        runtime,
-        chat_id,
-        page_size,
-        max_pages,
-        start_time,
-        end_time,
-    )
-    .await?;
+    let pages =
+        pull_message_items(runtime, chat_id, page_size, max_pages, start_time, end_time).await?;
 
     let mut seen = HashSet::new();
     let mut messages = Vec::new();
@@ -605,16 +592,14 @@ async fn pull_message_items(
         let page = parse_message_page(data)?;
         all_items.extend(page.items);
 
-        let next_token = page
-            .page_token
-            .and_then(|value| {
-                let trimmed = value.trim();
-                if trimmed.is_empty() {
-                    None
-                } else {
-                    Some(trimmed.to_string())
-                }
-            });
+        let next_token = page.page_token.and_then(|value| {
+            let trimmed = value.trim();
+            if trimmed.is_empty() {
+                None
+            } else {
+                Some(trimmed.to_string())
+            }
+        });
 
         if !page.has_more || next_token.is_none() {
             break;
@@ -706,15 +691,8 @@ async fn sync_to_bitable(
 ) -> Result<SyncSummary> {
     let (app_token, table_id) = runtime.require_bitable_target()?;
 
-    let mut messages = pull_message_digests(
-        runtime,
-        chat_id,
-        page_size,
-        max_pages,
-        start_time,
-        end_time,
-    )
-    .await?;
+    let mut messages =
+        pull_message_digests(runtime, chat_id, page_size, max_pages, start_time, end_time).await?;
 
     let mut sync_state = load_sync_state(runtime.sync_state_file())?;
     let known_message_ids = if full_sync {
@@ -1245,6 +1223,7 @@ impl SchedulerManager {
             );
         }
 
+        let state_for_task = state.clone();
         tokio::spawn(async move {
             let mut interval = tokio::time::interval(Duration::from_secs(interval_secs));
             interval.tick().await;
@@ -1256,7 +1235,7 @@ impl SchedulerManager {
                             break;
                         }
                         if *stop_rx.borrow() {
-                            let mut guard = state.lock().await;
+                            let mut guard = state_for_task.lock().await;
                             guard.status = "stopped".to_string();
                             guard.last_run_at = Some(now_rfc3339());
                             break;
@@ -1265,7 +1244,7 @@ impl SchedulerManager {
                     _ = interval.tick() => {
                         let result = send_to_chat(&runtime, &chat_id, &payload).await;
 
-                        let mut guard = state.lock().await;
+                        let mut guard = state_for_task.lock().await;
                         guard.last_run_at = Some(now_rfc3339());
                         match result {
                             Ok(_) => {
@@ -1285,7 +1264,11 @@ impl SchedulerManager {
             }
         });
 
-        Ok(state.lock().await.clone())
+        let snapshot = {
+            let guard = state.lock().await;
+            guard.clone()
+        };
+        Ok(snapshot)
     }
 
     async fn list_jobs(&self) -> Vec<ScheduledJobSnapshot> {
@@ -1494,7 +1477,9 @@ async fn api_chat_info(
     Json(req): Json<ApiChatIdRequest>,
 ) -> impl IntoResponse {
     let result = async {
-        let chat_id = state.runtime.resolve_chat_id(normalize_input(req.chat_id))?;
+        let chat_id = state
+            .runtime
+            .resolve_chat_id(normalize_input(req.chat_id))?;
         let data = GetChatRequest::new(state.runtime.config.clone())
             .chat_id(chat_id)
             .execute()
@@ -1512,7 +1497,9 @@ async fn api_pull_messages(
     Json(req): Json<ApiPullRequest>,
 ) -> impl IntoResponse {
     let result = async {
-        let chat_id = state.runtime.resolve_chat_id(normalize_input(req.chat_id))?;
+        let chat_id = state
+            .runtime
+            .resolve_chat_id(normalize_input(req.chat_id))?;
         let messages = pull_message_digests(
             &state.runtime,
             &chat_id,
@@ -1539,7 +1526,9 @@ async fn api_sync_messages(
     Json(req): Json<ApiSyncRequest>,
 ) -> impl IntoResponse {
     let result = async {
-        let chat_id = state.runtime.resolve_chat_id(normalize_input(req.chat_id))?;
+        let chat_id = state
+            .runtime
+            .resolve_chat_id(normalize_input(req.chat_id))?;
         let summary = sync_to_bitable(
             &state.runtime,
             &chat_id,
@@ -1588,7 +1577,9 @@ async fn api_send_text(
     Json(req): Json<ApiSendTextRequest>,
 ) -> impl IntoResponse {
     let result = async {
-        let chat_id = state.runtime.resolve_chat_id(normalize_input(req.chat_id))?;
+        let chat_id = state
+            .runtime
+            .resolve_chat_id(normalize_input(req.chat_id))?;
         let text = req.text.trim().to_string();
         if text.is_empty() {
             return Err(anyhow!("text is required"));
@@ -1607,7 +1598,9 @@ async fn api_send_image(
     Json(req): Json<ApiSendImageRequest>,
 ) -> impl IntoResponse {
     let result = async {
-        let chat_id = state.runtime.resolve_chat_id(normalize_input(req.chat_id))?;
+        let chat_id = state
+            .runtime
+            .resolve_chat_id(normalize_input(req.chat_id))?;
         let image_key = req.image_key.trim().to_string();
         if image_key.is_empty() {
             return Err(anyhow!("image_key is required"));
@@ -1626,7 +1619,9 @@ async fn api_schedule_text(
     Json(req): Json<ApiScheduleTextRequest>,
 ) -> impl IntoResponse {
     let result = async {
-        let chat_id = state.runtime.resolve_chat_id(normalize_input(req.chat_id))?;
+        let chat_id = state
+            .runtime
+            .resolve_chat_id(normalize_input(req.chat_id))?;
         let text = req.text.trim().to_string();
         if text.is_empty() {
             return Err(anyhow!("text is required"));
@@ -1655,7 +1650,9 @@ async fn api_schedule_image(
     Json(req): Json<ApiScheduleImageRequest>,
 ) -> impl IntoResponse {
     let result = async {
-        let chat_id = state.runtime.resolve_chat_id(normalize_input(req.chat_id))?;
+        let chat_id = state
+            .runtime
+            .resolve_chat_id(normalize_input(req.chat_id))?;
         let image_key = req.image_key.trim().to_string();
         if image_key.is_empty() {
             return Err(anyhow!("image_key is required"));
@@ -1845,16 +1842,18 @@ mod tests {
 
     #[test]
     fn test_load_sync_state_missing_file() {
-        let path = std::env::temp_dir()
-            .join(format!("group_sync_state_missing_{}.json", Uuid::new_v4()));
+        let path =
+            std::env::temp_dir().join(format!("group_sync_state_missing_{}.json", Uuid::new_v4()));
         let loaded = load_sync_state(path.to_str().expect("valid path")).expect("load should ok");
         assert!(loaded.chats.is_empty());
     }
 
     #[test]
     fn test_sync_state_round_trip() {
-        let path =
-            std::env::temp_dir().join(format!("group_sync_state_roundtrip_{}.json", Uuid::new_v4()));
+        let path = std::env::temp_dir().join(format!(
+            "group_sync_state_roundtrip_{}.json",
+            Uuid::new_v4()
+        ));
         let path_str = path.to_str().expect("valid path");
 
         let mut state = SyncState::default();
